@@ -37,7 +37,7 @@ REGISTER => [
 
 # 파이어베이스 설정
 
-cred = credentials.Certificate("path/to/serviceAccountKey.json") # TODO 파일명 변경 필요
+cred = credentials.Certificate("skku-pikachu-firebase.json") 
 firebase_admin.initialize_app(cred, {
     'databaseURL' : 'https://skku-pikachu-default-rtdb.firebaseio.com/'
 })
@@ -184,7 +184,7 @@ while True:
 
                 db.reference('REGISTER/' + tele_id + "/status").update(True)
             
-            else:
+            elif register_datas[tele_id]['sent_code'] is not -1:
 
                 db.reference('REGISTER/' + tele_id + "/sent_code").update(-1)
                 
