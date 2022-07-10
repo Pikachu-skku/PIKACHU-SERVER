@@ -82,9 +82,9 @@ def register_friend(update, context): # 사용자가 친구를 등록
 
     context.bot.send_message(chat_id=update.effective_chat.id, text= friend_id + "를 응급 연락처에 저장합니다. 사용자님은 이 사실을 /delete를 통해 취소할 수 있습니다.")
 
-    friends = db.reference('FRIENDS/' + update.effective_chat.id).get()
+    friends = db.reference('FRIENDS/' + str(update.effective_chat.id)).get()
     friends.append(friend_id)
-    db.reference('FRIENDS/' + update.effective_chat.id).update(friends)
+    db.reference('FRIENDS/' + str( update.effective_chat.id)).set(friends)
 
 updater.dispatcher.add_handler(CommandHandler('register', register_friend))
 
@@ -93,7 +93,7 @@ def delete_friend(update, context): # 사용자가 친구를 자신의 긴급연
 
     friend_id = context.args[0]
 
-    friends_in_me = db.reference('FRIENDS/' + update.effective_chat.id).get()
+    friends_in_me = db.reference('FRIENDS/' + str(update.effective_chat.id)).get()
 
     if friend_id not in friends_in_me:
 
@@ -105,7 +105,7 @@ def delete_friend(update, context): # 사용자가 친구를 자신의 긴급연
 
         friends_in_me.remove(friend_id) # 나의 연락처에 친구 삭제
 
-        db.reference('FRIENDS/' + update.effective_chat.id).update(friends)
+        db.reference('FRIENDS/' + str(update.effective_chat.id)).set(friends)
 
 
 updater.dispatcher.add_handler(CommandHandler('delete', delete_friend))
@@ -113,7 +113,7 @@ updater.dispatcher.add_handler(CommandHandler('delete', delete_friend))
 
 def friend_list(update, context): # 자신의 친구 조회
 
-    friends = db.reference('FRIENDS/' + update.effective_chat.id).get()
+    friends = db.reference('FRIENDS/' + str(update.effective_chat.id)).get()
 
     context.bot.send_message(chat_id=update.effective_chat.id, text= "응급 연락처에 존재하는 친구 목록을 보내드립니다.")
 
@@ -142,7 +142,7 @@ LOOP
 '''
 try:
     while True:
-        print("B")
+        
         '''
 
             핸드폰 상태 파악
@@ -162,7 +162,7 @@ try:
 
             if datas[tele_id]["last_time"] + 60 * 10 <= time.time(): # 10분 이상 지났을 때
 
-                print("AA")
+                
 
                 db.reference('GPSs/' + tele_id + '/disconnected').set(True) # 데이터 베이스에 위험 표시 ON
 
@@ -179,7 +179,7 @@ try:
         
             elif datas[tele_id]["disconnected"]: # 10분 이상 안 지났는데 disconnected 가 계속 이루어지면 
 
-                print("A")
+                
 
                 db.reference('GPSs/' + tele_id + '/disconnected').set(False) # 데이터 베이스에 위험 표시 ON
             
@@ -198,7 +198,7 @@ try:
             핸드폰에서 데이터베이스 생성 -> 서버에서 code 업데이트 -> 핸드폰에서 sent_code 업데이트 -> 서버에서 대조 후 맞으면 status 업데이트 -> 핸드폰에서 GPSs랑 Friends 등록
 
         '''
-        print("B")
+        
 
         register_datas = db.reference('REGISTER').get()
 
