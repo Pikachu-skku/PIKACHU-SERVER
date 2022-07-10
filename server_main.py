@@ -74,8 +74,9 @@ bot = telegram.Bot(token)
 
 '''
 
-updater = Updater(token=token, use_context=True)
+updater = Updater(token=token)
 
+updater.start_polling()
 
 def register_friend(update, context): # 사용자가 친구를 등록
 
@@ -133,8 +134,6 @@ def get_my_id(update, context): # 자신의 아이디 조회
 
 
 updater.dispatcher.add_handler(CommandHandler('myid', get_my_id))
-
-updater.start_polling()
 
 '''
 
