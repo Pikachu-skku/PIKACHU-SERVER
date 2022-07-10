@@ -7,11 +7,15 @@ Original file is located at
     https://colab.research.google.com/drive/15NfL6xCqGeMuskvqz_ARApWPAIbnq3Yb
 """
 
+''' Colab 환경에서는 필요
+
 !pip install --upgrade setuptools
 
 !pip3 install python-telegram-bot
 
 !pip install firebase_admin
+
+'''
 
 from random import random
 import firebase_admin
@@ -58,7 +62,7 @@ firebase_admin.initialize_app(cred, {
 
 # 텔레그램 설정
 
-token = "" # TODO 토큰 알아오기
+token = "5417501156:AAGiZWxuIX0N7Ujr5iFFuiVB6lr8S5sNt9c" # TODO 토큰 알아오기
 bot = telegram.Bot(token)
 
 
@@ -123,9 +127,14 @@ def friend_list(update, context): # 자신의 친구 조회
 
 updater.dispatcher.add_handler(CommandHandler('friends', friend_list))
 
+def get_my_id(update, context): # 자신의 아이디 조회
+    
+    context.bot.send_message(chat_id=update.effective_chat.id, text= update.effective_chat.id)
+
+
+updater.dispatcher.add_handler(CommandHandler('myid', get_my_id))
 
 updater.start_polling()
-
 
 '''
 
@@ -179,8 +188,6 @@ while True:
     '''
 
     register_datas = db.reference('REGISTER').get()
-
-    register_datas = json.loads(register_datas)
 
     for tele_id in register_datas:
 
