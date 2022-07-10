@@ -83,7 +83,9 @@ def register_friend(update, context): # 사용자가 친구를 등록
     context.bot.send_message(chat_id=update.effective_chat.id, text= friend_id + "를 응급 연락처에 저장합니다. 사용자님은 이 사실을 /delete를 통해 취소할 수 있습니다.")
 
     friends = db.reference('FRIENDS/' + str(update.effective_chat.id)).get()
-    friends.append(friend_id)
+
+
+    friends[friend_id] = 0
     db.reference('FRIENDS/' + str( update.effective_chat.id)).set(friends)
 
 updater.dispatcher.add_handler(CommandHandler('register', register_friend))
@@ -95,7 +97,7 @@ def delete_friend(update, context): # 사용자가 친구를 자신의 긴급연
 
     friends_in_me = db.reference('FRIENDS/' + str(update.effective_chat.id)).get()
 
-    if friend_id not in friends_in_me:
+    if friend_id not in friends_in_me.keys():
 
         context.bot.send_message(chat_id=update.effective_chat.id, text= friend_id + "님은 사용자와 친구가 아닙니다.")
 
@@ -103,9 +105,9 @@ def delete_friend(update, context): # 사용자가 친구를 자신의 긴급연
 
         context.bot.send_message(chat_id=update.effective_chat.id, text= friend_id + "님과 친구를 취소합니다.")
 
-        friends_in_me.remove(friend_id) # 나의 연락처에 친구 삭제
+        del friends_in_me[friend_id] # 나의 연락처에 친구 삭제
 
-        db.reference('FRIENDS/' + str(update.effective_chat.id)).set(friends)
+        db.reference('FRIENDS/' + str(update.effective_chat.id)).set(friends_in_me)
 
 
 updater.dispatcher.add_handler(CommandHandler('delete', delete_friend))
@@ -117,7 +119,10 @@ def friend_list(update, context): # 자신의 친구 조회
 
     context.bot.send_message(chat_id=update.effective_chat.id, text= "응급 연락처에 존재하는 친구 목록을 보내드립니다.")
 
-    for friend_id in friends:
+    if len(friends.keys()) == 0:
+        return
+
+    for friend_id in friends.keys():
 
         context.bot.send_message(chat_id=update.effective_chat.id, text= friend_id)
     
@@ -142,11 +147,11 @@ LOOP
 '''
 try:
     while True:
-        
+          
         '''
 
             핸드폰 상태 파악
-
+        
         '''
 
         datas = db.reference('GPSs').get()
@@ -190,14 +195,14 @@ try:
                     for friend in friends.keys():
 
                         bot.sendMessage(chat_id=friend, text="" + tele_id + "님의 연결이 회복되었습니다. 감사합니다.")
-    
-        '''
+
+            '''
 
             텔레그램 인증 절차
 
             핸드폰에서 데이터베이스 생성 -> 서버에서 code 업데이트 -> 핸드폰에서 sent_code 업데이트 -> 서버에서 대조 후 맞으면 status 업데이트 -> 핸드폰에서 GPSs랑 Friends 등록
 
-        '''
+            '''   
         
 
         register_datas = db.reference('REGISTER').get()
