@@ -110,7 +110,7 @@ async def start_loop():
                 if datas[tele_id]["last_time"] is -1: # 메시지 이미 보냈으면 무시
                     continue
 
-                if datas[tele_id]["last_time"] + 60 * 2<= time.time(): # 10분 이상 지났을 때
+                if datas[tele_id]["last_time"] + 1000 * 10 <= 1000 * time.time(): # 10분 이상 지났을 때
 
                     
 
