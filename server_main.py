@@ -84,9 +84,14 @@ LOOP
 
 
 async def start_loop():
+
+    g_db = db.reference("GPSs")
+    f_db = db.reference("FRIENDS")
+
     print("[System/Looper] Start loop")
-    with bot:
+    async with bot:
         while True:
+            print("A")
             
             '''
 
@@ -94,7 +99,7 @@ async def start_loop():
 
             '''
 
-            datas = db.reference('GPSs').get()
+            datas = g_db.get()
 
 
             for tele_id in datas.keys():
@@ -109,9 +114,9 @@ async def start_loop():
 
                     
 
-                    db.reference('GPSs/' + tele_id + '/disconnected').set(True) # 데이터 베이스에 위험 표시 ON
+                    g_db(tele_id + '/disconnected').set(True) # 데이터 베이스에 위험 표시 ON
 
-                    friends = db.reference('FRIENDS/' + tele_id).get()
+                    friends = f_db(tele_id).get()
 
                     if friends is not None:
                         
@@ -120,15 +125,15 @@ async def start_loop():
                             await bot.sendMessage(chat_id=friend, text="현재 " + tele_id + "님이 10분동안 연결이 안 됩니다! 도와주세요.")
                             await bot.sendMessage(chat_id=friend, text="GPS 위도 : " + str(datas[tele_id]["GPS"][0]) + ", GPS 경도 : " + str(datas[tele_id]["GPS"][1]))
 
-                    db.reference('GPSs/' + tele_id + '/last_time').set(-1) # 데이터 베이스에 위험 표시 ON
+                    g_db(tele_id + '/last_time').set(-1) # 데이터 베이스에 위험 표시 ON
 
                 elif datas[tele_id]["disconnected"]: # 10분 이상 안 지났는데 disconnected 가 계속 이루어지면 
 
                     
 
-                    db.reference('GPSs/' + tele_id + '/disconnected').set(False) # 데이터 베이스에 위험 표시 ON
+                    g_db(tele_id + '/disconnected').set(False) # 데이터 베이스에 위험 표시 ON
 
-                    friends = db.reference('FRIENDS/' + tele_id).get()
+                    friends = f_db(tele_id).get()
 
                     if friends is not None:
                         
@@ -147,11 +152,14 @@ async def start_loop():
 
             register_datas = db.reference('REGISTER').get()
 
+            if register_datas is None:
+                continue
+
             for tele_id in register_datas:
 
                 if not register_datas[tele_id]['status'] and register_datas[tele_id]['code'] == 0: # 핸드폰에서 시도를 하면 인증번호를 만들고 보내기
 
-                    code = await random.randint(1, 999999)
+                    code = random.randint(1, 999999)
                     register_datas[tele_id]['code'] == code
                     await bot.sendMessage(chat_id = tele_id, text = "인증번호 [" + str(code) + "]")
                     db.reference('REGISTER/' + tele_id + "/code").set(code)
@@ -175,20 +183,23 @@ async def start_loop():
 '''
 
 
+g_db = db.reference("GPSs")
+f_db = db.reference("FRIENDS")
+
 async def register_friend(update, context): # 사용자가 친구를 등록
 
     friend_id = context.args[0]
 
     await context.bot.send_message(chat_id=update.effective_chat.id, text= friend_id + "를 응급 연락처에 저장합니다. 사용자님은 이 사실을 /delete를 통해 취소할 수 있습니다.")
 
-    friends = db.reference('FRIENDS/' + str(update.effective_chat.id)).get()
+    friends = f_db(str(update.effective_chat.id)).get()
 
     if friends is None:
         friends = dict()
 
 
     friends[friend_id] = 0
-    db.reference('FRIENDS/' + str( update.effective_chat.id)).set(friends)
+    f_db(str( update.effective_chat.id)).set(friends)
 
 updater.add_handler(CommandHandler('register', register_friend))
 
@@ -197,7 +208,7 @@ async def delete_friend(update, context): # 사용자가 친구를 자신의 긴
 
     friend_id = context.args[0]
 
-    friends_in_me = db.reference('FRIENDS/' + str(update.effective_chat.id)).get()
+    friends_in_me = f_db(str(update.effective_chat.id)).get()
 
     if friend_id not in friends_in_me.keys():
 
@@ -209,7 +220,7 @@ async def delete_friend(update, context): # 사용자가 친구를 자신의 긴
 
         del friends_in_me[friend_id] # 나의 연락처에 친구 삭제
 
-        db.reference('FRIENDS/' + str(update.effective_chat.id)).set(friends_in_me)
+        f_db(str(update.effective_chat.id)).set(friends_in_me)
 
 
 updater.add_handler(CommandHandler('delete', delete_friend))
@@ -217,7 +228,7 @@ updater.add_handler(CommandHandler('delete', delete_friend))
 
 async def friend_list(update, context): # 자신의 친구 조회
 
-    friends = db.reference('FRIENDS/' + str(update.effective_chat.id)).get()
+    friends = f_db(str(update.effective_chat.id)).get()
 
     await context.bot.send_message(chat_id=update.effective_chat.id, text= "응급 연락처에 존재하는 친구 목록을 보내드립니다.")
 
