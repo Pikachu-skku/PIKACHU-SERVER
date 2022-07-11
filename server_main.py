@@ -103,14 +103,14 @@ async def start_loop():
 
 
             for tele_id in datas.keys():
-
+                #g_db.child(tele_id + '/last_time').set(time.time())
                 if not datas[tele_id]["status"]: # 외출 상황인지 확인
                     continue
 
                 if datas[tele_id]["last_time"] is -1: # 메시지 이미 보냈으면 무시
                     continue
 
-                if datas[tele_id]["last_time"] + 60 * 10 <= time.time(): # 10분 이상 지났을 때
+                if datas[tele_id]["last_time"] + 60 * 2<= time.time(): # 10분 이상 지났을 때
 
                     
 
@@ -119,11 +119,15 @@ async def start_loop():
                     friends = f_db.child(tele_id).get()
 
                     if friends is not None:
+                        print("B")
                         
                         for friend in friends.keys():
-                            
-                            await bot.sendMessage(chat_id=friend, text="현재 " + tele_id + "님이 10분동안 연결이 안 됩니다! 도와주세요.")
-                            await bot.sendMessage(chat_id=friend, text="GPS 위도 : " + str(datas[tele_id]["GPS"][0]) + ", GPS 경도 : " + str(datas[tele_id]["GPS"][1]))
+                            try :
+                                await bot.sendMessage(chat_id=friend, text="현재 " + tele_id + "님이 10분동안 연결이 안 됩니다! 도와주세요.")
+                                await bot.sendMessage(chat_id=friend, text="GPS 위도 : " + str(datas[tele_id]["GPS"][0]) + ", GPS 경도 : " + str(datas[tele_id]["GPS"][1]))
+                            except :
+                                print("C")
+
 
                     g_db.child(tele_id + '/last_time').set(-1) # 데이터 베이스에 위험 표시 ON
 
@@ -136,8 +140,10 @@ async def start_loop():
                     if friends is not None:
                         
                         for friend in friends.keys():
-
-                            await bot.sendMessage(chat_id=friend, text="" + tele_id + "님의 연결이 회복되었습니다. 감사합니다.")
+                            try :
+                                await bot.sendMessage(chat_id=friend, text="" + tele_id + "님의 연결이 회복되었습니다. 감사합니다.")
+                            except :
+                                print("C")
 
                 '''
 
@@ -171,94 +177,5 @@ async def start_loop():
 
                         db.reference('REGISTER/' + tele_id + "/sent_code").set(-1)
 
-
-'''
-
-텔레그램 CommandHandler 설정
-
-명령어 종류 : register, delete, friends
-
-'''
-
-
-f_db = db.reference("FRIENDS")
-
-async def register_friend(update, context): # 사용자가 친구를 등록
-
-    friend_id = context.args[0]
-
-    await context.bot.send_message(chat_id=update.effective_chat.id, text= friend_id + "를 응급 연락처에 저장합니다. 사용자님은 이 사실을 /delete를 통해 취소할 수 있습니다.")
-
-    friends = f_db.child(str(update.effective_chat.id)).get()
-
-    if friends is None:
-        friends = dict()
-
-
-    friends[friend_id] = 0
-    f_db.child(str( update.effective_chat.id)).set(friends)
-
-updater.add_handler(CommandHandler('register', register_friend))
-
-
-async def delete_friend(update, context): # 사용자가 친구를 자신의 긴급연락처에 존재하는 것을 거절
-
-    friend_id = context.args[0]
-
-    friends_in_me = f_db.child(str(update.effective_chat.id)).get()
-
-    if friend_id not in friends_in_me.keys():
-
-        await context.bot.send_message(chat_id=update.effective_chat.id, text= friend_id + "님은 사용자와 친구가 아닙니다.")
-
-    else:
-
-        await context.bot.send_message(chat_id=update.effective_chat.id, text= friend_id + "님과 친구를 취소합니다.")
-
-        del friends_in_me[friend_id] # 나의 연락처에 친구 삭제
-
-        f_db.child(str(update.effective_chat.id)).set(friends_in_me)
-
-
-updater.add_handler(CommandHandler('delete', delete_friend))
-
-
-async def friend_list(update, context): # 자신의 친구 조회
-
-    friends = f_db.child(str(update.effective_chat.id)).get()
-
-    await context.bot.send_message(chat_id=update.effective_chat.id, text= "응급 연락처에 존재하는 친구 목록을 보내드립니다.")
-
-    if friends is None:
-        return
-
-    if len(friends.keys()) == 0:
-        return
-
-    for friend_id in friends.keys():
-
-        await context.bot.send_message(chat_id=update.effective_chat.id, text= friend_id)
     
-    await context.bot.send_message(chat_id=update.effective_chat.id, text= "끝")
-
-
-updater.add_handler(CommandHandler('friends', friend_list))
-
-async def get_my_id(update, context): # 자신의 아이디 조회
-    
-    await context.bot.send_message(chat_id=update.effective_chat.id, text= update.effective_chat.id)
-
-
-updater.add_handler(CommandHandler('myid', get_my_id))
-
-async def run_tele_bot():
-    print("[System/Telegram] Start Telegram Bot")
-    updater.run_polling()
-
-async def run():
-
-    await asyncio.gather(run_tele_bot(), start_loop())
-
-    print("[System] Bye")
-
-asyncio.run(run())
+asyncio.run(start_loop())
