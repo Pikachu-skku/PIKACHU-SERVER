@@ -110,13 +110,13 @@ async def start_loop():
                 if datas[tele_id]["last_time"] is -1: # 메시지 이미 보냈으면 무시
                     continue
 
-                if datas[tele_id]["last_time"] + 60 * 10 <= time.time(): # 10분 이상 지났을 때
+                if datas[tele_id]["last_time"] + 1000 * 20 <= time.time() * 1000 : # 10분 이상 지났을 때
 
                     
 
-                    g_db(tele_id + '/disconnected').set(True) # 데이터 베이스에 위험 표시 ON
+                    g_db.child(tele_id + '/disconnected').set(True) # 데이터 베이스에 위험 표시 ON
 
-                    friends = f_db(tele_id).get()
+                    friends = f_db.child(tele_id).get()
 
                     if friends is not None:
                         
@@ -125,15 +125,13 @@ async def start_loop():
                             await bot.sendMessage(chat_id=friend, text="현재 " + tele_id + "님이 10분동안 연결이 안 됩니다! 도와주세요.")
                             await bot.sendMessage(chat_id=friend, text="GPS 위도 : " + str(datas[tele_id]["GPS"][0]) + ", GPS 경도 : " + str(datas[tele_id]["GPS"][1]))
 
-                    g_db(tele_id + '/last_time').set(-1) # 데이터 베이스에 위험 표시 ON
+                    g_db.child(tele_id + '/last_time').set(-1) # 데이터 베이스에 위험 표시 ON
 
                 elif datas[tele_id]["disconnected"]: # 10분 이상 안 지났는데 disconnected 가 계속 이루어지면 
 
-                    
+                    g_db.child(tele_id + '/disconnected').set(False) # 데이터 베이스에 위험 표시 ON
 
-                    g_db(tele_id + '/disconnected').set(False) # 데이터 베이스에 위험 표시 ON
-
-                    friends = f_db(tele_id).get()
+                    friends = f_db.child(tele_id).get()
 
                     if friends is not None:
                         
@@ -256,7 +254,7 @@ updater.add_handler(CommandHandler('myid', get_my_id))
 
 async def run_tele_bot():
     print("[System/Telegram] Start Telegram Bot")
-    updater.run_polling()
+    # updater.run_polling()
 
 async def run():
 
